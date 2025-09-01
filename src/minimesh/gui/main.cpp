@@ -28,7 +28,7 @@ using namespace minimesh;
 namespace globalvars
 {
 Mesh_viewer viewer;
-mohe::Mesh_connectivity mesh;
+mohecore::Mesh_connectivity mesh;
 //
 int glut_main_window_id;
 //
@@ -191,11 +191,11 @@ int main(int argc, char * argv[])
 	if(argc == 1)
 	{
 		foldertools::makeandsetdir("D:/UBC/TA/2021Fall-524/code/CPSC524/mesh");
-		mohe::Mesh_io(globalvars::mesh).read_auto("camel.obj");
+		mohecore::Mesh_io(globalvars::mesh).read_auto("camel.obj");
 	}
 	else // otherwise use the address specified in the command line
 	{
-		mohe::Mesh_io(globalvars::mesh).read_auto(argv[1]);
+		mohecore::Mesh_io(globalvars::mesh).read_auto(argv[1]);
 	}
 
 	// Initialize GLUT window
@@ -221,7 +221,7 @@ int main(int argc, char * argv[])
 	Eigen::AlignedBox3f bbox;
 	for(int v = 0; v < globalvars::mesh.n_total_vertices(); ++v)
 	{
-		mohe::Mesh_connectivity::Vertex_iterator vertex = globalvars::mesh.vertex_at(v);
+		mohecore::Mesh_connectivity::Vertex_iterator vertex = globalvars::mesh.vertex_at(v);
 		if(vertex.is_active())
 		{
 			bbox.extend(vertex.xyz().cast<float>());
@@ -231,7 +231,7 @@ int main(int argc, char * argv[])
 
 	// Load the mesh in the viewer
 	{
-		mohe::Mesh_connectivity::Defragmentation_maps defrag;
+		mohecore::Mesh_connectivity::Defragmentation_maps defrag;
 		globalvars::mesh.compute_defragmention_maps(defrag);
 		globalvars::viewer.get_mesh_buffer().rebuild(globalvars::mesh, defrag);
 	}

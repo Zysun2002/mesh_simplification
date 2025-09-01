@@ -15,7 +15,7 @@
 
 namespace minimesh
 {
-namespace mohe 
+namespace mohecore
 {
 
 //
@@ -201,7 +201,7 @@ public:
 	};
 
 	//
-	// Vertex_iterator: An iterator to traverse mesh half edges
+	// Half_edge_iterator: An iterator to traverse mesh half edges
 	//
 	class Half_edge_iterator
 	{
@@ -506,7 +506,7 @@ private:
 	Mesh_connectivity(const Mesh_connectivity &) = delete;
 };
 
-} // end of mohe
+} // end of mohecore
 } // end of minimesh
 
 

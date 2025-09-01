@@ -8,7 +8,7 @@
 namespace minimesh
 {
 
-void Mesh_buffer::rebuild(mohe::Mesh_connectivity & mesh, mohe::Mesh_connectivity_defragmentation_maps & defrag)
+void Mesh_buffer::rebuild(mohecore::Mesh_connectivity & mesh, mohecore::Mesh_connectivity_defragmentation_maps & defrag)
 {
 	tri_conn.resize(3, mesh.n_active_faces());
 	edge_conn.resize(2, mesh.n_active_half_edges() / 2);

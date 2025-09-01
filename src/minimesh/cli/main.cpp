@@ -75,9 +75,9 @@ write_example_mesh()
 int main(int argc, char **argv)
 {
   // Create a mesh_connectivity and a mesh reader
-  mohe::Mesh_connectivity mesh;
-  mohe::Mesh_io io(mesh);
-  mohe::Mesh_modifier modi(mesh);
+  mohecore::Mesh_connectivity mesh;
+  mohecore::Mesh_io io(mesh);
+  mohecore::Mesh_modifier modi(mesh);
 
   printf("=== MESH EDITTING EXAMPLE === \n");
 

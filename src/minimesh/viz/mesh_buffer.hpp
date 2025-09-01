@@ -6,7 +6,7 @@
 namespace minimesh
 {
 
-namespace mohe
+namespace mohecore
 {
 class Mesh_connectivity;
 class Mesh_connectivity_defragmentation_maps;
@@ -19,7 +19,7 @@ class Mesh_buffer
 public:
 	// Rebuild the mesh buffer from a mesh.
 	// It needs both the mesh and a defragmentation map for the mesh.
-	void rebuild(mohe::Mesh_connectivity &, mohe::Mesh_connectivity_defragmentation_maps & defrag);
+	void rebuild(mohecore::Mesh_connectivity &, mohecore::Mesh_connectivity_defragmentation_maps & defrag);
 
 	// Color the surface of the mesh, by interpolating colors at vertices of the mesh.
 	// Size of colors should be 4[RGBA] * n_active_vertices().

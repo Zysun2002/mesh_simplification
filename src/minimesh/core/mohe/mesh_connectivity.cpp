@@ -10,7 +10,7 @@
 
 namespace minimesh
 {
-namespace mohe
+namespace mohecore
 {
 
 // ========================================================
@@ -900,5 +900,5 @@ void Mesh_connectivity::clear()
 	this->_inactive_half_edges = std::stack<int>();
 }
 
-} // end of mohe
+} // end of mohecore
 } // end of minimesh

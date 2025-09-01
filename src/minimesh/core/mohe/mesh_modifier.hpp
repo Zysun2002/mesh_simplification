@@ -15,7 +15,7 @@
 
 namespace minimesh
 {
-namespace mohe
+namespace mohecore
 {
 
 
@@ -53,5 +53,5 @@ private:
 };
 
 
-} // end of mohe
+} // end of mohecore
 } // end of minimesh

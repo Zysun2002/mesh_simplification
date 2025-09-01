@@ -3,7 +3,7 @@
 
 namespace minimesh
 {
-namespace mohe
+namespace mohecore
 {
 
 
@@ -116,5 +116,5 @@ bool Mesh_modifier::flip_edge(const int he_index)
 } // All done
 
 
-} // end of mohe
+} // end of mohecore
 } // end of minimesh

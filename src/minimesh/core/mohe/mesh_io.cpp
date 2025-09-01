@@ -11,7 +11,7 @@
 
 namespace minimesh
 {
-namespace mohe
+namespace mohecore
 {
 
 FILE* Mesh_io::open_file(const std::string & fname, const std::string & format, const std::string & mode)
@@ -549,5 +549,5 @@ void Mesh_io::print_info(FILE * fl)
 	}
 }
 
-} // end of mohe
+} // end of mohecore
 } // end of minimesh
