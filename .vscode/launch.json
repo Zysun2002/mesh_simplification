@@ -43,6 +43,32 @@
       "args": [
         "../mesh/cube.obj",
       ],
-    } //  End of configurations # 1
-] // End of configurations
+    }, //  End of configurations # 1
+    {
+      "name": "(Windows) CLI Debug",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "stopAtEntry": false,
+      "environment": [],
+      "externalConsole": false,
+      "console": "integratedTerminal",
+      "visualizerFile": "${workspaceRoot}/debugger/eigen/msvc/eigen.natvis",
+      "program": "${workspaceRoot}/build/bin/minimeshcli.exe",
+      "cwd": "${workspaceRoot}/build/",
+      "args": []
+    }, //  End of configurations # 2
+        {
+      "name": "(Windows) GUI Debug",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "stopAtEntry": false,
+      "environment": [],
+      "externalConsole": false,
+      "console": "integratedTerminal",
+      "visualizerFile": "${workspaceRoot}/debugger/eigen/msvc/eigen.natvis",
+      "program": "${workspaceRoot}/build/bin/minimeshgui.exe",
+      "cwd": "${workspaceRoot}/build/",
+      "args": ["../mesh/cube.obj"]
+    } //  End of configurations # 2
+] // End of configurationss
 }

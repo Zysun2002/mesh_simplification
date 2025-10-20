@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <memory>
+#include <cstring>
 
 // eigen
 #include <Eigen/Core>
@@ -11,13 +12,17 @@
 // core
 #include <minimesh/core/mohe/mesh_connectivity.hpp>
 #include <minimesh/core/mohe/mesh_io.hpp>
+#include <minimesh/core/mohe/mesh_modifier.hpp>
 #include <minimesh/core/util/assert.hpp>
 #include <minimesh/core/util/foldertools.hpp>
 #include <minimesh/core/util/numbers.hpp>
+#include <minimesh/core/mohe/mesh_simplification.hpp>
 
 // gui
 #include <minimesh/viz/mesh_viewer.hpp>
 #include <minimesh/viz/opengl_headers.hpp>
+
+
 
 
 using namespace minimesh;
@@ -37,6 +42,9 @@ GLUI * glui;
 int num_entities_to_simplify;
 //
 Eigen::Matrix3Xd displaced_vertex_positions;
+
+std::string subdivision_type;
+
 }
 
 
@@ -148,13 +156,60 @@ void mouse_moved(int x, int y)
 
 void subdivide_pressed(int)
 {
-	printf("Subdivide button was pressed \n");
+
+
+	// std::cout<<"button bushed yeah!";
+	// printf("Subdivide button was pressed \n");
+
+	// std::cout<<globalvars::subdivision_type<<std::endl;
+
+
+	// mohecore::Butterfly_subdivider subdiv(globalvars::mesh);
+	// if (globalvars::subdivision_type == "butterfly"){}
+	// else if(globalvars::subdivision_type == "loop")
+		// mohecore::Loop_subdivider subdiv(globalvars::mesh);
+	// else throw std::runtime_error("Wrong subdivision type");
+
+
+  //   subdiv.subdivide_loop();
+
+	// // copy from main, re-render the mesh
+	// {
+	// 	mohecore::Mesh_connectivity::Defragmentation_maps defrag;
+	// 	globalvars::mesh.compute_defragmention_maps(defrag);
+	// 	globalvars::viewer.get_mesh_buffer().rebuild(globalvars::mesh, defrag);
+	// }
+
+  //   globalvars::displaced_vertex_positions.resize(3, globalvars::mesh.n_active_vertices());
+  //   for (int i = 0; i < globalvars::mesh.n_active_vertices(); ++i)
+  //   {
+  //       globalvars::displaced_vertex_positions.col(i) = globalvars::mesh.vertex_at(i).xyz();
+  //   }
+
+  //   // 4. Redraw
+  //   glutPostRedisplay();
+
+	std::cout<<"button bushed done!";
 }
 
 
 void simplify_pressed(int)
 {
+
 	printf("Simplify button was pressed to remove %d entities \n", globalvars::num_entities_to_simplify);
+
+  mohecore::Simplifier simp(globalvars::mesh);
+
+  // simp.simplify_once();
+  simp.simplify_try_before_commit(0);
+
+  	// // copy from main, re-render the mesh
+	{
+		mohecore::Mesh_connectivity::Defragmentation_maps defrag;
+		globalvars::mesh.compute_defragmention_maps(defrag);
+		globalvars::viewer.get_mesh_buffer().rebuild(globalvars::mesh, defrag);
+	}
+
 }
 
 
@@ -184,18 +239,18 @@ int main(int argc, char * argv[])
 {
 	// Remember current folder
 	foldertools::pushd();
-
 	// If no command line argument is specified, load a hardcoded mesh.
 	// Useful when debugging with visual studio.
 	// Change the hardcoded address to your needs.
-	if(argc == 1)
+	if(argc < 2)
 	{
-		foldertools::makeandsetdir("D:/UBC/TA/2021Fall-524/code/CPSC524/mesh");
-		mohecore::Mesh_io(globalvars::mesh).read_auto("camel.obj");
+		throw std::runtime_error("Missing arguments meshfile or subdivision type.");
 	}
 	else // otherwise use the address specified in the command line
 	{
+    std::cout<<"hello minimesh!"<<std::endl;
 		mohecore::Mesh_io(globalvars::mesh).read_auto(argv[1]);
+		// globalvars::subdivision_type = argv[2];
 	}
 
 	// Initialize GLUT window
@@ -284,6 +339,7 @@ int main(int argc, char * argv[])
 	// Add show spheres button to demo how to draw spheres on top of the vertices
 	//
 	globalvars::glui->add_button("Demo Showing Spheres", -1, freeglutcallback::show_spheres_pressed);
+
 
 	//
 	// Save the initial vertex positions

@@ -8,6 +8,9 @@ project(minimesh)
 set(MINIMESH_SOURCE_DIR  ${PROJECT_SOURCE_DIR})
 include("${PROJECT_SOURCE_DIR}/cmake/minimesh.cmake")
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 ##
 ## Options
 ##

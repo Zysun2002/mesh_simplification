@@ -506,6 +506,8 @@ private:
 	Mesh_connectivity(const Mesh_connectivity &) = delete;
 };
 
+
+
 } // end of mohecore
 } // end of minimesh
 

@@ -70,6 +70,7 @@ bool Mesh_connectivity::Vertex_iterator::is_equal(Vertex_iterator o)
 // ========================= HALF EDGE ===========================
 Mesh_connectivity::Half_edge_data & Mesh_connectivity::Half_edge_iterator::data()
 {
+	// std::cout<<_index<<std::endl;
 	assert(_index >= 0);
 	assert(_index < _parent->n_total_half_edges());
 
@@ -263,6 +264,7 @@ Mesh_connectivity::Vertex_ring_iterator Mesh_connectivity::vertex_ring_at(const 
 	assert(vertex_at(vertex_id).is_active());
 	// we must initialize the iterator with a half edge ending
 	// at this vertex.
+	
 	return Vertex_ring_iterator(vertex_at(vertex_id).half_edge().twin());
 }
 
@@ -785,25 +787,35 @@ bool Mesh_connectivity::check_sanity_slowly(const bool verbose)
 		Half_edge_iterator he = half_edge_at(heid);
 		if(he.is_active())
 		{
+
+      // std::cout<<he.index()<<std::endl;
 			soft_assert_msg(he.twin().is_active(), "");
 			soft_assert_msg(he.twin().twin().is_equal(he), "");
 			
+      // std::cout<<he.index()<<std::endl;
 			soft_assert_msg(he.next().is_active(), "");
 			soft_assert_msg(he.next().prev().is_equal(he), "");
       
+      // std::cout<<he.index()<<std::endl;
 			soft_assert_msg(he.prev().is_active(), "");
 			soft_assert_msg(he.prev().next().is_equal(he), "");
       
+      // std::cout<<he.index()<<std::endl;
 			soft_assert_msg(!he.prev().is_equal(he), "");
 			soft_assert_msg(!he.next().is_equal(he), "");
 			soft_assert_msg(!he.prev().is_equal(he.next()), "");
       
+      // std::cout<<he.index()<<std::endl;
+      // std::cout<<"he.origin(): "<<he.origin().index()<<std::endl;
 			soft_assert_msg(he.origin().is_active(), "");
+      // std::cout<<"bug5"<<std::endl;
 			soft_assert_msg(he.face().is_equal(hole()) ||  he.face().is_active(), "");
 			
+      // std::cout<<"face problem" <<std::endl;
+      // std::cout<<"he.face(): "<<he.face().index()<<std::endl;
+      // std::cout<<"he.twin().face(): "<<he.twin().face().index()<<std::endl;
 			// Both the he and twin should not be on the boundary (a tiny line!)
 			soft_assert_msg( (!he.face().is_equal(hole())) || (!he.twin().face().is_equal(hole())), "");
-      
 		}
 	}
 
@@ -842,6 +854,7 @@ bool Mesh_connectivity::check_sanity_slowly(const bool verbose)
 				soft_assert_msg(n_traversed_edges < max_vertex_outgoing_half_edges, "");
 
 				// There should not be more than one edge between two vertices
+        // std::cout<<"one vertex: "<< vid << " other vertex: " << other_vertex <<std::endl;
 				soft_assert_msg(!is_vertex_visited[other_vertex], "More than one edge between two");
 				is_vertex_visited.set( other_vertex );
 

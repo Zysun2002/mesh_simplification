@@ -53,5 +53,40 @@ private:
 };
 
 
+class Butterfly_subdivider
+{
+public:
+	// Trivial constructor
+	Butterfly_subdivider(Mesh_connectivity & mesh_in): _m(mesh_in) {}
+
+	// Get the underlying mesh
+	Mesh_connectivity & mesh() { return _m; }
+	const Mesh_connectivity & mesh() const { return _m; }
+
+	bool subdivide_loop();
+
+private:
+	// pointer to the mesh that we are working on.
+	Mesh_connectivity & _m;
+};
+
+class Loop_subdivider
+{
+public:
+	// Trivial constructor
+	Loop_subdivider(Mesh_connectivity & mesh_in): _m(mesh_in) {}
+
+	// Get the underlying mesh
+	Mesh_connectivity & mesh() { return _m; }
+	const Mesh_connectivity & mesh() const { return _m; }
+
+	bool subdivide_loop();
+
+private:
+	// pointer to the mesh that we are working on.
+	Mesh_connectivity & _m;
+};
+
+
 } // end of mohecore
 } // end of minimesh
