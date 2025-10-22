@@ -68,7 +68,7 @@
       "visualizerFile": "${workspaceRoot}/debugger/eigen/msvc/eigen.natvis",
       "program": "${workspaceRoot}/build/bin/minimeshgui.exe",
       "cwd": "${workspaceRoot}/build/",
-      "args": ["../mesh/cube.obj"]
+      "args": ["../mesh/example_sphere.obj"]
     } //  End of configurations # 2
 ] // End of configurationss
 }

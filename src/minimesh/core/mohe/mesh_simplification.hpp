@@ -52,38 +52,38 @@ struct EdgeCollapse
 };
 
 
-class Mesh_modifier_for_simplification
-{
-public:
-	// Trivial constructor
-	Mesh_modifier_for_simplification(Mesh_connectivity & mesh_in): _m(mesh_in) {}
+// class Mesh_modifier_for_simplification
+// {
+// public:
+// 	// Trivial constructor
+// 	Mesh_modifier_for_simplification(Mesh_connectivity & mesh_in): _m(mesh_in) {}
 
-	// Get the underlying mesh
-	Mesh_connectivity & mesh() { return _m; }
-	const Mesh_connectivity & mesh() const { return _m; }
+// 	// Get the underlying mesh
+// 	Mesh_connectivity & mesh() { return _m; }
+// 	const Mesh_connectivity & mesh() const { return _m; }
 
-	//
-	// Given two vertices, this function return the index of the half-edge going from v0 to v1.
-	// Returns mesh::invalid_index if no half-edge exists between the two vertices.
-	//
-	int get_halfedge_between_vertices(Mesh_connectivity& mesh, const int v0, const int v1);
+// 	//
+// 	// Given two vertices, this function return the index of the half-edge going from v0 to v1.
+// 	// Returns mesh::invalid_index if no half-edge exists between the two vertices.
+// 	//
+// 	int get_halfedge_between_vertices(Mesh_connectivity& mesh, const int v0, const int v1);
 
-	//
-	// Flip an edge in a mesh
-	// Input: The mesh, and the index of a half-edge on the edge we wish to flip
-	// Return true if operation successful, and false if operation not possible
-	//
-	// Assumption: mesh is all triangles
-	//
-	// NOTE: To see how this method works, take a look at edge-flip.svg
-	//
-	bool flip_edge(const int he_index);
+// 	//
+// 	// Flip an edge in a mesh
+// 	// Input: The mesh, and the index of a half-edge on the edge we wish to flip
+// 	// Return true if operation successful, and false if operation not possible
+// 	//
+// 	// Assumption: mesh is all triangles
+// 	//
+// 	// NOTE: To see how this method works, take a look at edge-flip.svg
+// 	//
+// 	bool flip_edge(const int he_index);
 
 
-private:
-	// pointer to the mesh that we are working on.
-	Mesh_connectivity & _m;
-};
+// private:
+// 	// pointer to the mesh that we are working on.
+// 	Mesh_connectivity & _m;
+// };
 
 
 class Simplifier
@@ -99,6 +99,13 @@ public:
 	// Get the proxy mesh
 	Mesh_connectivity & proxy_mesh() { return _proxy_mesh; }
 	const Mesh_connectivity & proxy_mesh() const { return _proxy_mesh; }
+
+
+  std::vector<EdgeCollapse> getLowestCostEdges(int num_edges = 3);
+	Eigen::Matrix4Xf createEdgeCostVertexColors(const std::vector<EdgeCollapse>& lowest_cost_edges, 
+	                                           Mesh_connectivity::Defragmentation_maps& defrag);
+	Eigen::Matrix4Xf createEdgeCostFaceColors(const std::vector<EdgeCollapse>& lowest_cost_edges,
+	                                         Mesh_connectivity::Defragmentation_maps& defrag);
 
 	bool simplify_try_before_commit(int target_faces); 
   bool simplify_test_ahead(int target_faces);
@@ -116,7 +123,9 @@ private:
 	void buildInitialEdgeQueue(const std::map<int, Quadric>& vertex_quadrics,
 	                          std::priority_queue<EdgeCollapse, std::vector<EdgeCollapse>, std::greater<EdgeCollapse>>& edge_queue,
 	                          std::set<std::pair<int,int>>& processed_edges);
-	
+
+	int get_halfedge_between_vertices(Mesh_connectivity& mesh, const int v0, const int v1);
+
 	EdgeCollapse computeEdgeCollapse(int v1, int v2, int he_idx, const std::map<int, Quadric>& vertex_quadrics);
 
 	void checkVertexAssociatedHalfEdges(Mesh_connectivity& mesh, int halfedge_idx);
@@ -139,8 +148,9 @@ private:
 	                    std::set<std::pair<int,int>>& processed_edges);
 	
 	bool wouldCreateNonManifold(int v1, int v2);
-	int get_halfedge_between_vertices(Mesh_connectivity& mesh, const int v0, const int v1);
-
+	
+	// Methods for visualizing edge costs
+	
 };
 
 

@@ -153,55 +153,59 @@ void mouse_moved(int x, int y)
 		glutPostRedisplay();
 }
 
+void update_lowest_cost_edge_colors()
+{
+    // Get the 3 lowest cost edges
+    mohecore::Simplifier simp(globalvars::mesh);
+    std::vector<mohecore::EdgeCollapse> lowest_cost_edges = simp.getLowestCostEdges(3);
+    
+    // Get defragmentation maps
+    mohecore::Mesh_connectivity::Defragmentation_maps defrag;
+    globalvars::mesh.compute_defragmention_maps(defrag);
+    
+    // Create and apply vertex colors
+    Eigen::Matrix4Xf vertex_colors = simp.createEdgeCostVertexColors(lowest_cost_edges, defrag);
+    globalvars::viewer.get_mesh_buffer().set_vertex_colors(vertex_colors);
+    
+    // Create and apply face colors
+    Eigen::Matrix4Xf face_colors = simp.createEdgeCostFaceColors(lowest_cost_edges, defrag);
+    globalvars::viewer.get_mesh_buffer().set_face_colors(face_colors);
+    
+    // Print edge information to console
+    std::cout << "\n=== 3 Lowest Cost Edges ===" << std::endl;
+    for (size_t i = 0; i < lowest_cost_edges.size(); ++i) {
+        const mohecore::EdgeCollapse& collapse = lowest_cost_edges[i];
+        std::string color_name;
+        if (i == 0) color_name = "Red";
+        else if (i == 1) color_name = "Orange"; 
+        else if (i == 2) color_name = "Yellow";
+        
+        std::cout << "Rank " << (i+1) << " (" << color_name << "): Edge (" 
+                  << collapse.v1 << " -> " << collapse.v2 << ") Cost: " 
+                  << collapse.cost << std::endl;
+    }
+    std::cout << "=========================" << std::endl;
+}
+
 
 void subdivide_pressed(int)
 {
-
-
-	// std::cout<<"button bushed yeah!";
-	// printf("Subdivide button was pressed \n");
-
-	// std::cout<<globalvars::subdivision_type<<std::endl;
-
-
-	// mohecore::Butterfly_subdivider subdiv(globalvars::mesh);
-	// if (globalvars::subdivision_type == "butterfly"){}
-	// else if(globalvars::subdivision_type == "loop")
-		// mohecore::Loop_subdivider subdiv(globalvars::mesh);
-	// else throw std::runtime_error("Wrong subdivision type");
-
-
-  //   subdiv.subdivide_loop();
-
-	// // copy from main, re-render the mesh
-	// {
-	// 	mohecore::Mesh_connectivity::Defragmentation_maps defrag;
-	// 	globalvars::mesh.compute_defragmention_maps(defrag);
-	// 	globalvars::viewer.get_mesh_buffer().rebuild(globalvars::mesh, defrag);
-	// }
-
-  //   globalvars::displaced_vertex_positions.resize(3, globalvars::mesh.n_active_vertices());
-  //   for (int i = 0; i < globalvars::mesh.n_active_vertices(); ++i)
-  //   {
-  //       globalvars::displaced_vertex_positions.col(i) = globalvars::mesh.vertex_at(i).xyz();
-  //   }
-
-  //   // 4. Redraw
-  //   glutPostRedisplay();
-
-	std::cout<<"button bushed done!";
+	std::cout<<"not implemented yet"<<std::endl;
 }
 
 
 void simplify_pressed(int)
 {
 
-	printf("Simplify button was pressed to remove %d entities \n", globalvars::num_entities_to_simplify);
+	// printf("Simplify button was pressed to remove %d entities \n", globalvars::num_entities_to_simplify);
+
+  // std::cout<<globalvars::num_entities_to_simplify<<std::endl;
 
   mohecore::Simplifier simp(globalvars::mesh);
 
   // simp.simplify_once();
-  simp.simplify_try_before_commit(0);
+  // globalvars::num_entities_to_simplify = 18000;
+  simp.simplify_test_ahead(globalvars::num_entities_to_simplify);
 
   	// // copy from main, re-render the mesh
 	{
@@ -209,6 +213,12 @@ void simplify_pressed(int)
 		globalvars::mesh.compute_defragmention_maps(defrag);
 		globalvars::viewer.get_mesh_buffer().rebuild(globalvars::mesh, defrag);
 	}
+	
+	// Update colors to show the 3 lowest cost edges
+	update_lowest_cost_edge_colors();
+	
+	// Redraw the scene
+	glutPostRedisplay();
 
 }
 
@@ -290,6 +300,9 @@ int main(int argc, char * argv[])
 		globalvars::mesh.compute_defragmention_maps(defrag);
 		globalvars::viewer.get_mesh_buffer().rebuild(globalvars::mesh, defrag);
 	}
+	
+	// Show the 3 lowest cost edges initially
+	freeglutcallback::update_lowest_cost_edge_colors();
 
 	//
 	// Add radio buttons to see which mesh components to view

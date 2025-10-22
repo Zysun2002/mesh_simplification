@@ -89,36 +89,31 @@ Eigen::Vector4d computePlaneEquation(const Eigen::Vector3d& p1, const Eigen::Vec
 // Given two vertices, this function return the index of the half-edge going from v0 to v1.
 // Returns -1 if no half-edge exists between the two vertices.
 //
-// int Mesh_modifier_for_simplification::get_halfedge_between_vertices(Mesh_connectivity& mesh, const int v0, const int v1)
-// {
-// 	// Get a ring iterator for v0
-// 	Mesh_connectivity::Vertex_ring_iterator ring_iter = mesh.vertex_ring_at(v0);
+int Simplifier::get_halfedge_between_vertices(Mesh_connectivity& mesh, const int v0, const int v1)
+{
+	// Get a ring iterator for v0
+	Mesh_connectivity::Vertex_ring_iterator ring_iter = mesh.vertex_ring_at(v0);
 
-// 	int answer = mesh.invalid_index;
+	int answer = mesh.invalid_index;
 
-// 	// Loop over all half-edges that end at v0.
-// 	do
-// 	{
-// 		// Make sure that the half-edge does end at v0
-//                                                                                                                                                                                                                                                                                                                                                                                                             		assert(ring_iter.half_edge().dest().index() == v0);
+	// Loop over all half-edges that end at v0.
+	do
+	{
 
-// 		// If the half-edge also starts and v1, then it's twin
-// 		// goes from v0 to v1. This would be the half-edge that
-// 		// we were looking for
-// 		if(ring_iter.half_edge().origin().index() == v1)
-// 		{
-// 			answer = ring_iter.half_edge().twin().index();
-// 		}
-// 	} while(ring_iter.advance());
+		if(ring_iter.half_edge().origin().index() == v1)
+		{
+			answer = ring_iter.half_edge().twin().index();
+		}
+	} while(ring_iter.advance());
 
-// 	if(answer != mesh.invalid_index)
-// 	{
-// 		assert(mesh.half_edge_at(answer).origin().index() == v0);
-// 		assert(mesh.half_edge_at(answer).dest().index() == v1);
-// 	}
+	if(answer != mesh.invalid_index)
+	{
+		assert(mesh.half_edge_at(answer).origin().index() == v0);
+		assert(mesh.half_edge_at(answer).dest().index() == v1);
+	}
 
-// 	return answer;
-// }
+	return answer;
+}
 
 
 // bool Mesh_modifier_for_simplification::flip_edge(const int he_index)
@@ -200,15 +195,15 @@ bool Simplifier::simplify_once()
     return simplify_try_before_commit(mesh().n_active_faces() - 1);
 }
 
-bool Simplifier::simplify_test_ahead(int target_faces)
+bool Simplifier::simplify_test_ahead(int num_faces_to_simplify)
 {
     
     int original_num_faces = mesh().n_active_faces();
     // int target_faces = original_num_faces / 2;
-    // int target_faces  = 0;
+    int target_faces  = original_num_faces - num_faces_to_simplify;
     
-    std::cout << "Starting QSlim simplification from " << original_num_faces 
-              << " faces to " << target_faces << " faces" << std::endl;
+    // std::cout << "Starting QSlim simplification from " << original_num_faces 
+    //           << " faces to " << target_faces << " faces" << std::endl;
     
     std::map<int, Quadric> vertex_quadrics;
     initializeVertexQuadrics(vertex_quadrics);
@@ -219,7 +214,7 @@ bool Simplifier::simplify_test_ahead(int target_faces)
     
     buildInitialEdgeQueue(vertex_quadrics, edge_queue, processed_edges);
     
-    std::cout << "Initial edge queue size: " << edge_queue.size() << std::endl;
+    // std::cout << "Initial edge queue size: " << edge_queue.size() << std::endl;
     
     // Step 3: Perform edge collapses
     int collapses_performed = 0;
@@ -231,9 +226,7 @@ bool Simplifier::simplify_test_ahead(int target_faces)
         
         if (!isValidCollapse(collapse)) 
         {
-          // check here 
-          
-          
+        
           continue;  
         }
 
@@ -477,11 +470,11 @@ bool Simplifier::isValidCollapse(const EdgeCollapse& collapse)
     
     // If the stored half-edge is invalid, try to find the edge between v1 and v2
     // Mesh_modifier_for_simplification modifier(mesh());
-    // int he_between = modifier.get_halfedge_between_vertices(collapse.v1, collapse.v2);
-    // if (he_between != mesh().invalid_index) 
-    // {
-    //     return !wouldCreateNonManifold(collapse.v1, collapse.v2);
-    // }
+    int he_between = get_halfedge_between_vertices(mesh(), collapse.v1, collapse.v2);
+    if (he_between != mesh().invalid_index) 
+    {
+        return !wouldCreateNonManifold(collapse.v1, collapse.v2);
+    }
     
     return false;
 }
@@ -670,7 +663,7 @@ void Simplifier::updateEdgeQueue(int vertex_idx, const std::map<int, Quadric>& v
     std::set<int> neighbors;
     do 
     {
-        int neighbor = ring_iter.half_edge().dest().index();
+        int neighbor = ring_iter.half_edge().origin().index();
         if (neighbors.find(neighbor) == neighbors.end()) 
         {
                        neighbors.insert(neighbor);
@@ -711,7 +704,7 @@ bool Simplifier::wouldCreateNonManifold(int v1, int v2)
     // Get neighbors of v1
     auto ring1 = mesh().vertex_ring_at(v1);
     do {
-        int neighbor = ring1.half_edge().dest().index();
+        int neighbor = ring1.half_edge().origin().index();
         if (neighbor != v2) { // Don't include v2 as a neighbor of v1
             neighbors_v1.insert(neighbor);
         }
@@ -720,7 +713,7 @@ bool Simplifier::wouldCreateNonManifold(int v1, int v2)
     // Get neighbors of v2
     auto ring2 = mesh().vertex_ring_at(v2);
     do {
-        int neighbor = ring2.half_edge().dest().index();
+        int neighbor = ring2.half_edge().origin().index();
         if (neighbor != v1) { // Don't include v1 as a neighbor of v2
             neighbors_v2.insert(neighbor);
         }
@@ -740,7 +733,7 @@ bool Simplifier::wouldCreateNonManifold(int v1, int v2)
     
     // 2. For manifold topology, two vertices should share at most 2 neighbors
     // (corresponding to the two triangles adjacent to the edge)
-    if (shared_neighbors.size() > 2) {
+    if (shared_neighbors.size() != 2) {
       std::cout << "Non-manifold detected: shared neighbors > 2 between vertices " << v1 << " and " << v2 << std::endl;
         
       return true; // Too many shared neighbors indicates complex topology
@@ -973,37 +966,162 @@ bool Simplifier::checkProxyManifold(Mesh_connectivity& mesh)
     return true; // All checks passed - mesh appears manifold
 }
 
-int Simplifier::get_halfedge_between_vertices(Mesh_connectivity& mesh, const int v0, const int v1)
+// Get the edges with the lowest collapse cost
+std::vector<EdgeCollapse> Simplifier::getLowestCostEdges(int num_edges)
 {
-	// Get a ring iterator for v0
-	Mesh_connectivity::Vertex_ring_iterator ring_iter = mesh.vertex_ring_at(v0);
-
-	int answer = mesh.invalid_index;
-
-	// Loop over all half-edges that end at v0.
-	do
-	{
-		// Make sure that the half-edge does end at v0
-		assert(ring_iter.half_edge().dest().index() == v0);
-
-		// If the half-edge also starts and v1, then it's twin
-		// goes from v0 to v1. This would be the half-edge that
-		// we were looking for
-		if(ring_iter.half_edge().origin().index() == v1)
-		{
-			answer = ring_iter.half_edge().twin().index();
-		}
-	} while(ring_iter.advance());
-
-	if(answer != mesh.invalid_index)
-	{
-		assert(mesh.half_edge_at(answer).origin().index() == v0);
-		assert(mesh.half_edge_at(answer).dest().index() == v1);
-	}
-
-	return answer;
+    std::vector<EdgeCollapse> result;
+    
+    // Initialize quadrics for all vertices
+    std::map<int, Quadric> vertex_quadrics;
+    initializeVertexQuadrics(vertex_quadrics);
+    
+    // Build priority queue of edge collapses
+    std::priority_queue<EdgeCollapse, std::vector<EdgeCollapse>, std::greater<EdgeCollapse>> edge_queue;
+    std::set<std::pair<int,int>> processed_edges;
+    
+    buildInitialEdgeQueue(vertex_quadrics, edge_queue, processed_edges);
+    
+    // Extract the lowest cost edges
+    for (int i = 0; i < num_edges && !edge_queue.empty(); ++i) {
+        EdgeCollapse collapse = edge_queue.top();
+        edge_queue.pop();
+        
+        // Only add valid collapses
+        if (isValidCollapse(collapse)) {
+            result.push_back(collapse);
+        } else {
+            // If this collapse is invalid, try the next one
+            --i;
+        }
+    }
+    
+    return result;
 }
 
+// Create vertex colors to highlight edges with lowest cost
+Eigen::Matrix4Xf Simplifier::createEdgeCostVertexColors(const std::vector<EdgeCollapse>& lowest_cost_edges,
+                                                        Mesh_connectivity::Defragmentation_maps& defrag)
+{
+    Eigen::Matrix4Xf colors(4, mesh().n_active_vertices());
+    
+    // Default color: light gray
+    for (int i = 0; i < mesh().n_active_vertices(); ++i) {
+        colors(0, i) = 0.8f; // R
+        colors(1, i) = 0.8f; // G  
+        colors(2, i) = 0.8f; // B
+        colors(3, i) = 1.0f; // A
+    }
+    
+    // Priority tracking: 0 = default, 1 = yellow, 2 = orange, 3 = red
+    std::vector<int> vertex_priority(mesh().n_active_vertices(), 0);
+    
+    // Color vertices of lowest cost edges
+    std::vector<Eigen::Vector3f> edge_colors = {
+        {1.0f, 0.0f, 0.0f}, // Red for lowest cost
+        {1.0f, 0.5f, 0.0f}, // Orange for second lowest
+        {1.0f, 1.0f, 0.0f}  // Yellow for third lowest
+    };
+    
+    // Process in reverse order (yellow first) so red can overwrite
+    for (int i = lowest_cost_edges.size() - 1; i >= 0 && i < (int)edge_colors.size(); --i) {
+        const EdgeCollapse& collapse = lowest_cost_edges[i];
+        int priority = 3 - i; // Red=3, Orange=2, Yellow=1
+        
+        // Color both vertices of the edge if priority is higher
+        int v1_continuous = defrag.old2new_vertices[collapse.v1];
+        int v2_continuous = defrag.old2new_vertices[collapse.v2];
+        
+        if (v1_continuous >= 0 && v1_continuous < mesh().n_active_vertices()) {
+            if (vertex_priority[v1_continuous] < priority) {
+                colors(0, v1_continuous) = edge_colors[i](0);
+                colors(1, v1_continuous) = edge_colors[i](1);
+                colors(2, v1_continuous) = edge_colors[i](2);
+                vertex_priority[v1_continuous] = priority;
+            }
+        }
+        
+        if (v2_continuous >= 0 && v2_continuous < mesh().n_active_vertices()) {
+            if (vertex_priority[v2_continuous] < priority) {
+                colors(0, v2_continuous) = edge_colors[i](0);
+                colors(1, v2_continuous) = edge_colors[i](1);
+                colors(2, v2_continuous) = edge_colors[i](2);
+                vertex_priority[v2_continuous] = priority;
+            }
+        }
+    }
+    
+    return colors;
+}
+
+// Create face colors to highlight faces adjacent to lowest cost edges
+Eigen::Matrix4Xf Simplifier::createEdgeCostFaceColors(const std::vector<EdgeCollapse>& lowest_cost_edges,
+                                                      Mesh_connectivity::Defragmentation_maps& defrag)
+{
+    Eigen::Matrix4Xf colors(4, mesh().n_active_faces());
+    
+    // Default color: light gray
+    for (int i = 0; i < mesh().n_active_faces(); ++i) {
+        colors(0, i) = 0.9f; // R
+        colors(1, i) = 0.9f; // G
+        colors(2, i) = 0.9f; // B
+        colors(3, i) = 1.0f; // A
+    }
+    
+    // Priority tracking: 0 = default, 1 = yellow, 2 = orange, 3 = red
+    std::vector<int> face_priority(mesh().n_active_faces(), 0);
+    
+    // Color faces adjacent to lowest cost edges
+    std::vector<Eigen::Vector3f> edge_colors = {
+        {1.0f, 0.0f, 0.0f}, // Red for lowest cost
+        {1.0f, 0.5f, 0.0f}, // Orange for second lowest  
+        {1.0f, 1.0f, 0.0f}  // Yellow for third lowest
+    };
+    
+    // Process in reverse order (yellow first) so red can overwrite
+    for (int i = lowest_cost_edges.size() - 1; i >= 0 && i < (int)edge_colors.size(); --i) {
+        const EdgeCollapse& collapse = lowest_cost_edges[i];
+        int priority = 3 - i; // Red=3, Orange=2, Yellow=1
+        
+        // Find faces that contain this edge
+        if (collapse.he_index >= 0 && collapse.he_index < mesh().n_total_half_edges()) {
+            auto he = mesh().half_edge_at(collapse.he_index);
+            if (he.is_active()) {
+                // Color the face containing this half-edge
+                if (!he.face().is_equal(mesh().hole())) {
+                    int face_idx = he.face().index();
+                    int face_continuous = defrag.old2new_faces[face_idx];
+                    
+                    if (face_continuous >= 0 && face_continuous < mesh().n_active_faces()) {
+                        if (face_priority[face_continuous] < priority) {
+                            colors(0, face_continuous) = edge_colors[i](0);
+                            colors(1, face_continuous) = edge_colors[i](1);
+                            colors(2, face_continuous) = edge_colors[i](2);
+                            face_priority[face_continuous] = priority;
+                        }
+                    }
+                }
+                
+                // Color the face containing the twin half-edge
+                auto he_twin = he.twin();
+                if (he_twin.is_active() && !he_twin.face().is_equal(mesh().hole())) {
+                    int face_idx = he_twin.face().index();
+                    int face_continuous = defrag.old2new_faces[face_idx];
+                    
+                    if (face_continuous >= 0 && face_continuous < mesh().n_active_faces()) {
+                        if (face_priority[face_continuous] < priority) {
+                            colors(0, face_continuous) = edge_colors[i](0);
+                            colors(1, face_continuous) = edge_colors[i](1);
+                            colors(2, face_continuous) = edge_colors[i](2);
+                            face_priority[face_continuous] = priority;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    return colors;
+}
 
 } // end of mohecore
 } // end of minimesh
