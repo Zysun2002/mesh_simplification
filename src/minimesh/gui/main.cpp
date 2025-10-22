@@ -214,10 +214,9 @@ void simplify_pressed(int)
 		globalvars::viewer.get_mesh_buffer().rebuild(globalvars::mesh, defrag);
 	}
 	
-	// Update colors to show the 3 lowest cost edges
+	// update colors to show the 3 lowest cost edges
 	update_lowest_cost_edge_colors();
 	
-	// Redraw the scene
 	glutPostRedisplay();
 
 }

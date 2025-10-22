@@ -86,17 +86,12 @@ Eigen::Vector4d computePlaneEquation(const Eigen::Vector3d& p1, const Eigen::Vec
 
 
 //
-// Given two vertices, this function return the index of the half-edge going from v0 to v1.
-// Returns -1 if no half-edge exists between the two vertices.
-//
 int Simplifier::get_halfedge_between_vertices(Mesh_connectivity& mesh, const int v0, const int v1)
 {
-	// Get a ring iterator for v0
 	Mesh_connectivity::Vertex_ring_iterator ring_iter = mesh.vertex_ring_at(v0);
 
 	int answer = mesh.invalid_index;
 
-	// Loop over all half-edges that end at v0.
 	do
 	{
 
@@ -114,79 +109,6 @@ int Simplifier::get_halfedge_between_vertices(Mesh_connectivity& mesh, const int
 
 	return answer;
 }
-
-
-// bool Mesh_modifier_for_simplification::flip_edge(const int he_index)
-// {
-// 	//
-// 	// Take a reference to all involved entities
-// 	//
-
-// 	// HALF-EDGES
-// 	Mesh_connectivity::Half_edge_iterator he0 = mesh().half_edge_at(he_index);
-// 	Mesh_connectivity::Half_edge_iterator he1 = he0.twin();
-
-// 	// meshes on the boundary are not flippable
-// 	if(he0.face().is_equal(mesh().hole()) || he1.face().is_equal(mesh().hole()))
-// 	{
-// 		return false;
-// 	}
-
-// 	Mesh_connectivity::Half_edge_iterator he2 = he0.next();
-// 	Mesh_connectivity::Half_edge_iterator he3 = he2.next();
-// 	Mesh_connectivity::Half_edge_iterator he4 = he1.next();
-// 	Mesh_connectivity::Half_edge_iterator he5 = he4.next();
-
-// 	// VERTICES
-// 	Mesh_connectivity::Vertex_iterator v0 = he1.origin();
-// 	Mesh_connectivity::Vertex_iterator v1 = he0.origin();
-// 	Mesh_connectivity::Vertex_iterator v2 = he3.origin();
-// 	Mesh_connectivity::Vertex_iterator v3 = he5.origin();
-
-// 	// FACES
-// 	Mesh_connectivity::Face_iterator f0 = he0.face();
-// 	Mesh_connectivity::Face_iterator f1 = he1.face();
-
-// 	//
-// 	// Now modify the connectivity
-// 	//
-
-// 	// HALF-EDGES
-// 	he0.data().next = he3.index();
-// 	he0.data().prev = he4.index();
-// 	he0.data().origin = v3.index();
-// 	//
-// 	he1.data().next = he5.index();
-// 	he1.data().prev = he2.index();
-// 	he1.data().origin = v2.index();
-// 	//
-// 	he2.data().next = he1.index();
-// 	he2.data().prev = he5.index();
-// 	he2.data().face = f1.index();
-// 	//
-// 	he3.data().next = he4.index();
-// 	he3.data().prev = he0.index();
-// 	//
-// 	he4.data().next = he0.index();
-// 	he4.data().prev = he3.index();
-// 	he4.data().face = f0.index();
-// 	//
-// 	he5.data().next = he2.index();
-// 	he5.data().prev = he1.index();
-
-// 	// VERTICES
-// 	v0.data().half_edge = he2.index();
-// 	v1.data().half_edge = he4.index();
-// 	v2.data().half_edge = he1.index();
-// 	v3.data().half_edge = he0.index();
-
-// 	// FACES
-// 	f0.data().half_edge = he0.index();
-// 	f1.data().half_edge = he1.index();
-
-// 	// operation successful
-// 	return true;
-// } // All done
 
 
 
@@ -208,7 +130,6 @@ bool Simplifier::simplify_test_ahead(int num_faces_to_simplify)
     std::map<int, Quadric> vertex_quadrics;
     initializeVertexQuadrics(vertex_quadrics);
     
-    // Step 2: Compute initial edge collapse costs and build priority queue
     std::priority_queue<EdgeCollapse, std::vector<EdgeCollapse>, std::greater<EdgeCollapse>> edge_queue;
     std::set<std::pair<int,int>> processed_edges; // To avoid duplicate edges
     
@@ -216,7 +137,7 @@ bool Simplifier::simplify_test_ahead(int num_faces_to_simplify)
     
     // std::cout << "Initial edge queue size: " << edge_queue.size() << std::endl;
     
-    // Step 3: Perform edge collapses
+    // edge collapses
     int collapses_performed = 0;
     while (mesh().n_active_faces() > target_faces && !edge_queue.empty()) 
     {
@@ -226,7 +147,7 @@ bool Simplifier::simplify_test_ahead(int num_faces_to_simplify)
         
         if (!isValidCollapse(collapse)) 
         {
-        
+  
           continue;  
         }
 
@@ -342,7 +263,6 @@ bool Simplifier::simplify_try_before_commit(int target_faces)
     return true;
 }
 
-// Initialize quadric for each vertex based on adjacent faces
 void Simplifier::initializeVertexQuadrics(std::map<int, Quadric>& vertex_quadrics)
 {
     // Initialize all vertices with zero quadrics
@@ -355,13 +275,12 @@ void Simplifier::initializeVertexQuadrics(std::map<int, Quadric>& vertex_quadric
         }
     }
     
-    // Accumulate quadrics from adjacent faces
+    // accumulate quadrics from adjacent faces
     for (int f_idx = 0; f_idx < mesh().n_total_faces(); ++f_idx) 
     {
         auto face = mesh().face_at(f_idx);
         if (!face.is_active()) continue;
         
-        // Get the three vertices of the triangle
         auto he = face.half_edge();
         int v1_idx = he.origin().index();
         int v2_idx = he.next().origin().index();  
@@ -371,11 +290,11 @@ void Simplifier::initializeVertexQuadrics(std::map<int, Quadric>& vertex_quadric
         Eigen::Vector3d p2 = mesh().vertex_at(v2_idx).xyz();
         Eigen::Vector3d p3 = mesh().vertex_at(v3_idx).xyz();
         
-        // Compute plane equation
+        // get plane equation
         Eigen::Vector4d plane = computePlaneEquation(p1, p2, p3);
         Quadric face_quadric(plane);
-        
-        // Add to vertex quadrics
+
+        // add to vertex quadrics
         vertex_quadrics[v1_idx] = vertex_quadrics[v1_idx] + face_quadric;
         vertex_quadrics[v2_idx] = vertex_quadrics[v2_idx] + face_quadric;
         vertex_quadrics[v3_idx] = vertex_quadrics[v3_idx] + face_quadric;
@@ -446,7 +365,6 @@ EdgeCollapse Simplifier::computeEdgeCollapse(int v1, int v2, int he_idx, const s
 // Check if an edge collapse is still valid
 bool Simplifier::isValidCollapse(const EdgeCollapse& collapse)
 {
-    // Check if vertices still exist and are active
     auto v1 = mesh().vertex_at(collapse.v1);
     auto v2 = mesh().vertex_at(collapse.v2);
     
@@ -455,7 +373,7 @@ bool Simplifier::isValidCollapse(const EdgeCollapse& collapse)
         return false;
     }
     
-    // Check if half-edge still exists and is active
+    // whether halfedge still exists
     if (collapse.he_index >= 0 && collapse.he_index < mesh().n_total_half_edges()) 
     {
         auto he = mesh().half_edge_at(collapse.he_index);
@@ -463,13 +381,11 @@ bool Simplifier::isValidCollapse(const EdgeCollapse& collapse)
             ((he.origin().index() == collapse.v1 && he.dest().index() == collapse.v2) ||
              (he.origin().index() == collapse.v2 && he.dest().index() == collapse.v1))) 
         {
-            // Check if collapse would create non-manifold topology
+            // two-neighbor for the edge
             return !wouldCreateNonManifold(collapse.v1, collapse.v2);
         }
     }
     
-    // If the stored half-edge is invalid, try to find the edge between v1 and v2
-    // Mesh_modifier_for_simplification modifier(mesh());
     int he_between = get_halfedge_between_vertices(mesh(), collapse.v1, collapse.v2);
     if (he_between != mesh().invalid_index) 
     {
@@ -482,10 +398,7 @@ bool Simplifier::isValidCollapse(const EdgeCollapse& collapse)
 // Perform the actual edge collapse
 bool Simplifier::performEdgeCollapse(Mesh_connectivity& mesh, EdgeCollapse& collapse, std::map<int, Quadric>& vertex_quadrics)
 {
-    // Create a mesh modifier to access the helper method
-    // Mesh_modifier_for_simplification modifier(mesh);
-    
-    // Find the half-edge between the vertices
+
     int he_idx = get_halfedge_between_vertices(mesh, collapse.v1, collapse.v2);
     if (he_idx == mesh.invalid_index) 
     {
@@ -499,21 +412,20 @@ bool Simplifier::performEdgeCollapse(Mesh_connectivity& mesh, EdgeCollapse& coll
     
     auto he = mesh.half_edge_at(he_idx);
     
-    // Make sure v1 is the vertex that will remain (origin of he)
+    // sort to avoid collision
     if (he.origin().index() != collapse.v1) 
     {
         std::swap(collapse.v1, collapse.v2);
     }
     
-    // Update the position of the remaining vertex
+    // update position
     auto v1 = mesh.vertex_at(collapse.v1);
     v1.data().xyz = collapse.new_pos;
     
-    // Update the quadric of the remaining vertex
     vertex_quadrics[collapse.v1] = vertex_quadrics[collapse.v1] + vertex_quadrics[collapse.v2];
     vertex_quadrics.erase(collapse.v2);
     
-    // Perform the topological collapse
+    // important
     return collapseEdgeTopology(mesh, he_idx, collapse.v1, collapse.v2);
 }
 
@@ -551,19 +463,14 @@ bool Simplifier::collapseEdgeTopology(Mesh_connectivity & mesh, int he_idx, int 
     auto he2_next = he_twin.next();
     auto he2_prev = he_twin.prev();
     
-    // Store the twin half-edges of the boundary edges that will remain
+    // /\
+    // \/
     auto he1_next_twin = he1_next.twin();
     auto he1_prev_twin = he1_prev.twin();
     auto he2_next_twin = he2_next.twin();
     auto he2_prev_twin = he2_prev.twin();
     
-    // Connect the twin half-edges to each other to bridge the gap
-    // After removing the triangles, we need to connect the remaining boundary
-    
-    // For triangle f1: connect the twins of he1_prev and he1_next
-
-    
-    // Redirect all half-edges that have v_remove as origin to use v_keep instead
+    // halfedges_to_redirect
     auto v_remove_iter = mesh.vertex_at(v_remove);
     auto ring_iter = mesh.vertex_ring_at(v_remove);
     
@@ -571,7 +478,6 @@ bool Simplifier::collapseEdgeTopology(Mesh_connectivity & mesh, int he_idx, int 
     do 
     {
         int current_he = ring_iter.half_edge().index();
-        // Skip the half-edges we're about to delete
         if (current_he != he.index() && current_he != he_twin.index() &&
             current_he != he1_next.index() && current_he != he1_prev.index() &&
             current_he != he2_next.index() && current_he != he2_prev.index() &&
@@ -591,16 +497,12 @@ bool Simplifier::collapseEdgeTopology(Mesh_connectivity & mesh, int he_idx, int 
       }
 
 
-    
-    // Redirect the origin of remaining half-edges from v_remove to v_keep
     // for (int redirect_he : halfedges_to_redirect) 
     // {
     //     auto redirect_he_iter = mesh().half_edge_at(redirect_he);
     //     redirect_he_iter.data().origin = v_keep;
     // }
     
-    // Update vertex half-edge pointer for v_keep
-    // Find a half-edge that will remain after the collapse
     auto v_keep_ring = mesh.vertex_ring_at(v_keep);
     bool found_valid_he = false;
 
@@ -619,6 +521,7 @@ bool Simplifier::collapseEdgeTopology(Mesh_connectivity & mesh, int he_idx, int 
     he2_prev.twin().data().origin = v_keep;
 
     he.deactivate();
+    // find a valid halfedge to associate with v_keep
     checkVertexAssociatedHalfEdges(mesh, he.index());
 
     he_twin.deactivate();
@@ -647,13 +550,11 @@ bool Simplifier::collapseEdgeTopology(Mesh_connectivity & mesh, int he_idx, int 
     }
 
     
-    // Remove the vertex
     v_remove_iter.deactivate();
     
     return true;
 }
 
-// Update edge queue with new edges around a vertex
 void Simplifier::updateEdgeQueue(int vertex_idx, const std::map<int, Quadric>& vertex_quadrics,
                                 std::priority_queue<EdgeCollapse, std::vector<EdgeCollapse>, std::greater<EdgeCollapse>>& edge_queue,
                                 std::set<std::pair<int,int>>& processed_edges)
@@ -672,7 +573,6 @@ void Simplifier::updateEdgeQueue(int vertex_idx, const std::map<int, Quadric>& v
             int v2 = neighbor;
             if (v1 > v2) std::swap(v1, v2);
             
-            // Only add if we haven't processed this edge before
             if (processed_edges.find({v1, v2}) == processed_edges.end()) 
             {
                 processed_edges.insert({v1, v2});
@@ -686,10 +586,8 @@ void Simplifier::updateEdgeQueue(int vertex_idx, const std::map<int, Quadric>& v
     } while (ring_iter.advance());
 }
 
-// Check if collapsing edge between v1 and v2 would create non-manifold topology
 bool Simplifier::wouldCreateNonManifold(int v1, int v2)
 {
-    // Get vertex iterators
     auto vertex1 = mesh().vertex_at(v1);
     auto vertex2 = mesh().vertex_at(v2);
     
@@ -698,10 +596,10 @@ bool Simplifier::wouldCreateNonManifold(int v1, int v2)
       return true; // Can't collapse inactive vertices
     }
     
-    // Collect neighbors of both vertices
+
+    // important: only allow 2 vectex neighbors for the edge
     std::set<int> neighbors_v1, neighbors_v2, shared_neighbors;
     
-    // Get neighbors of v1
     auto ring1 = mesh().vertex_ring_at(v1);
     do {
         int neighbor = ring1.half_edge().origin().index();
@@ -710,7 +608,6 @@ bool Simplifier::wouldCreateNonManifold(int v1, int v2)
         }
     } while (ring1.advance());
     
-    // Get neighbors of v2
     auto ring2 = mesh().vertex_ring_at(v2);
     do {
         int neighbor = ring2.half_edge().origin().index();
@@ -719,80 +616,24 @@ bool Simplifier::wouldCreateNonManifold(int v1, int v2)
         }
     } while (ring2.advance());
     
-    // Find shared neighbors (vertices connected to both v1 and v2)
     std::set_intersection(neighbors_v1.begin(), neighbors_v1.end(),
                          neighbors_v2.begin(), neighbors_v2.end(),
                          std::inserter(shared_neighbors, shared_neighbors.begin()));
     
     // Basic manifold checks:
     
-    // 1. Check if vertices have reasonable degree
     // if (neighbors_v1.size() < 2 || neighbors_v2.size() < 2) {
     //     return true; // Vertices with degree < 2 are problematic
     // }
     
-    // 2. For manifold topology, two vertices should share at most 2 neighbors
-    // (corresponding to the two triangles adjacent to the edge)
     if (shared_neighbors.size() != 2) {
       std::cout << "Non-manifold detected: shared neighbors > 2 between vertices " << v1 << " and " << v2 << std::endl;
         
-      return true; // Too many shared neighbors indicates complex topology
+      return true;
     }
     
-    // 3. Check if the collapse would create vertices with excessive degree
-    // The resulting vertex will have degree = deg(v1) + deg(v2) - shared_neighbors - 2
-    // int resulting_degree = neighbors_v1.size() + neighbors_v2.size() - shared_neighbors.size();
-    // if (resulting_degree > 20) { // Reasonable upper bound for vertex degree
-    //     return true;
-    // }
-    
-    // 4. Special check for boundary edges
-    // If this is a boundary edge, ensure we're not creating problems
-    // Mesh_modifier_for_simplification modifier(mesh());
-    // int he_between = modifier.get_halfedge_between_vertices(v1, v2);
-    // if (he_between == mesh().invalid_index) {
-    //     he_between = modifier.get_halfedge_between_vertices(v2, v1);
-    // }
-    
-    // if (he_between != mesh().invalid_index) {
-    //     auto he = mesh().half_edge_at(he_between);
-    //     auto he_twin = he.twin();
-        
-    //     bool is_boundary = (he.face().is_equal(mesh().hole()) || he_twin.face().is_equal(mesh().hole()));
-        
-    //     if (is_boundary) {
-    //         // For boundary edges, be more conservative
-    //         if (shared_neighbors.size() != 1) {
-    //             return true; // Boundary edge should have exactly 1 shared neighbor
-    //         }
-    //     } else {
-    //         // For interior edges, should have exactly 2 shared neighbors
-    //         if (shared_neighbors.size() != 2) {
-    //             return true;
-    //         }
-    //     }
-    // }
-    
-    // 5. Check for potential triangle inversions
-    // Ensure that after collapse, no triangles become degenerate
-    // for (int shared_neighbor : shared_neighbors) {
-    //     auto shared_vertex = mesh().vertex_at(shared_neighbor);
-    //     if (!shared_vertex.is_active()) continue;
-        
-    //     // Check if the triangle formed by v1, v2, and shared_neighbor would become degenerate
-    //     Eigen::Vector3d p1 = vertex1.xyz();
-    //     Eigen::Vector3d p2 = vertex2.xyz();
-    //     Eigen::Vector3d p_shared = shared_vertex.xyz();
-        
-    //     // Check triangle area - if it's too small, the collapse might create problems
-    //     Eigen::Vector3d cross = (p2 - p1).cross(p_shared - p1);
-    //     double area = 0.5 * cross.norm();
-    //     if (area < 1e-10) {
-    //         return true; // Triangle is nearly degenerate
-    //     }
-    // }
-    
-    return false; // Collapse appears safe
+   
+    return false; 
 }
 
 // Initialize proxy mesh as a copy of the original mesh
